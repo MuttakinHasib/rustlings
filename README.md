@@ -29,3 +29,4 @@ rustlings reset intro1   # reset an exercise to its original state
 
 - The workspace `Cargo.toml` wires up both `exercises/` and `solutions/` as binaries (`<name>` and `<name>_sol`).
 - Clippy is configured as the check command via `rust-analyzer.toml`, matching how the Rustlings checker grades.
+- A `pre-commit` hook (`.githooks/`) auto-updates the completion status in this README on every commit. Enable it after cloning with `git config core.hooksPath .githooks`.

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Keep the exercise completion status in README.md in sync on every commit.
+cd "$(git rev-parse --show-toplevel)" || exit 0
+[ -f README.md ] || exit 0
+
+total=$(find exercises -name '*.rs' 2>/dev/null | wc -l | tr -d ' ')
+pending=$(grep -rl 'I AM NOT DONE' exercises 2>/dev/null | wc -l | tr -d ' ')
+completed=$((total - pending))
+
+perl -pi -e "s/^\*\*Status:\*\* \d+\/\d+ exercises completed.*/**Status:** $completed\/$total exercises completed ✅/" README.md
+git add README.md

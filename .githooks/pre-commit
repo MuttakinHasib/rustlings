@@ -1,11 +1,29 @@
 #!/bin/sh
-# Keep the exercise completion status in README.md in sync on every commit.
+# Keep the exercise completion status in README.md in sync via `rustlings check-all`.
 cd "$(git rev-parse --show-toplevel)" || exit 0
 [ -f README.md ] || exit 0
 
-total=$(find exercises -name '*.rs' 2>/dev/null | wc -l | tr -d ' ')
-pending=$(grep -rl 'I AM NOT DONE' exercises 2>/dev/null | wc -l | tr -d ' ')
-completed=$((total - pending))
+out=$(rustlings check-all 2>&1 | perl -pe 's/\e\][^\e]*\e\\//g; s/\e\[[0-9;?]*[a-zA-Z]//g')
 
-perl -pi -e "s/^\*\*Status:\*\* \d+\/\d+ exercises completed.*/**Status:** $completed\/$total exercises completed ✅/" README.md
+summary=$(printf '%s\n' "$out" | grep -oE '[0-9]+/[0-9]+ exercises pending' | tail -n 1)
+if [ -n "$summary" ]; then
+  pending=${summary%%/*}
+  total=${summary#*/}
+  total=${total%% *}
+elif printf '%s\n' "$out" | grep -qiE 'congratulations|all exercises (are )?(done|completed|passed)'; then
+  # Wording variant when everything passes
+  pending=0
+  total=$(find exercises -name '*.rs' | wc -l | tr -d ' ')
+else
+  exit 0
+fi
+
+completed=$((total - pending))
+if [ "$pending" -eq 0 ]; then
+  line="**Status:** $completed/$total exercises completed ✅"
+else
+  line="**Status:** $completed/$total exercises completed"
+fi
+
+perl -pi -e "s|^\*\*Status:\*\* .*$|$line|" README.md
 git add README.md
